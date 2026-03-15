@@ -13,7 +13,7 @@ import (
 // Layer assignment and strategy selection live here; callers remain unaware of both.
 func New() *scanner.Orchestrator {
 	return scanner.NewOrchestrator(
-		[]scanner.DependenciesDetectionStrategy{manifest.NewCMake(), manifest.NewConan(), manifest.NewVcpkg()},
+		[]scanner.DependenciesDetectionStrategy{manifest.NewCMake(), manifest.NewVcpkg()},
 		[]scanner.DependenciesDetectionStrategy{binary.New(), compiledb.New()},
 		[]scanner.DependenciesDetectionStrategy{pkgconfig.New()},
 		[]scanner.DependenciesDetectionStrategy{headerinclude.New()},
