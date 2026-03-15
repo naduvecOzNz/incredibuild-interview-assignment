@@ -11,7 +11,7 @@ import (
 
 	"cpp-sbom-builder/internal/output"
 	"cpp-sbom-builder/internal/output/spdx"
-	"cpp-sbom-builder/internal/scanner"
+	"cpp-sbom-builder/internal/scanner/orchestrator"
 )
 
 // generators is the registry of supported output formats.
@@ -54,7 +54,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 	gen := generators[0]
 
-	s := scanner.New()
+	s := orchestrator.New()
 	components, err := s.Run(context.Background(), *targetDir)
 	if err != nil {
 		fmt.Fprintf(stderr, "scan failed: %v\n", err)

@@ -35,16 +35,6 @@ func NewOrchestrator(layers ...[]DependenciesDetectionStrategy) *Orchestrator {
 	return &Orchestrator{layers: layers}
 }
 
-// New constructs the default Orchestrator with all configured detection layers.
-// Layer assignment and strategy selection live here; callers remain unaware of both.
-func New() *Orchestrator {
-	return NewOrchestrator(
-		[]DependenciesDetectionStrategy{ /* L1: manifest strategies (CMake, Conan, vcpkg) */ },
-		[]DependenciesDetectionStrategy{ /* L2: binary + compile_commands strategies — run in parallel */ },
-		[]DependenciesDetectionStrategy{ /* L3: pkg-config strategies */ },
-		[]DependenciesDetectionStrategy{ /* L4: header include strategies */ },
-	)
-}
 
 // Run indexes the project filesystem once, then executes each layer in order.
 // Strategies within a layer run concurrently; each layer receives the registry
