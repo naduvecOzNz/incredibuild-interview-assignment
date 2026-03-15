@@ -42,18 +42,18 @@ func (s *headerIncludeStrategy) Analyze(_ context.Context, projectRoot string, i
 		}
 	}
 
-	// Build a name → version map from the registry for fast lookup
+	// Build a name → version map from the registry for fast lookup (case-insensitive)
 	registeredWithVersion := map[string]bool{}
 	for _, d := range reg.All() {
 		if d.Version != "" {
-			registeredWithVersion[d.Name] = true
+			registeredWithVersion[strings.ToLower(d.Name)] = true
 		}
 	}
 
 	// Convert namespaces to deps, skipping those already in the registry with a version
 	var deps []scanner.Dependency
 	for ns := range namespaces {
-		if registeredWithVersion[ns] {
+		if registeredWithVersion[strings.ToLower(ns)] {
 			continue
 		}
 		deps = append(deps, scanner.Dependency{

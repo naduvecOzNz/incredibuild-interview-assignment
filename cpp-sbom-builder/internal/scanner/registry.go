@@ -1,6 +1,9 @@
 package scanner
 
-import "sync"
+import (
+	"strings"
+	"sync"
+)
 
 // ReadOnlyRegistry is the read-only view of the registry passed to each strategy.
 type ReadOnlyRegistry interface {
@@ -40,9 +43,9 @@ func newRegistry() *Registry {
 
 func depKey(d Dependency) string {
 	if d.PURL != "" {
-		return d.PURL
+		return strings.ToLower(d.PURL)
 	}
-	return d.Name + "@" + d.Version
+	return strings.ToLower(d.Name + "@" + d.Version)
 }
 
 // Merge upserts deps into the registry.

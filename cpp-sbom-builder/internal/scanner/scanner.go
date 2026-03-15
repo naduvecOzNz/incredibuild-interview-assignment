@@ -3,6 +3,8 @@ package scanner
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -35,6 +37,15 @@ func NewOrchestrator(layers ...[]DependenciesDetectionStrategy) *Orchestrator {
 	return &Orchestrator{layers: layers}
 }
 
+
+// logStrategyResult logs the names of dependencies found by a strategy.
+func logStrategyResult(strategyName string, deps []Dependency) {
+	names := make([]string, len(deps))
+	for i, d := range deps {
+		names[i] = d.Name
+	}
+	fmt.Printf("strategy %q found %d dependencies: %v\n", strategyName, len(deps), names)
+}
 
 // Run indexes the project filesystem once, then executes each layer in order.
 // Strategies within a layer run concurrently; each layer receives the registry
@@ -75,9 +86,23 @@ func (o *Orchestrator) Run(ctx context.Context, projectRoot string) ([]Dependenc
 			if r.err != nil {
 				return nil, fmt.Errorf("strategy %q: %w", r.name, r.err)
 			}
+			logStrategyResult(r.name, r.deps)
 			registry.Merge(r.deps)
 		}
 	}
 
-	return registry.All(), nil
+	projectName := filepath.Base(filepath.Clean(projectRoot))
+	return filterSelfReference(registry.All(), projectName), nil
+}
+
+// filterSelfReference removes any dependency whose name matches the project name (case-insensitive),
+// preventing the project from listing itself as its own dependency.
+func filterSelfReference(deps []Dependency, projectName string) []Dependency {
+	var out []Dependency
+	for _, d := range deps {
+		if !strings.EqualFold(d.Name, projectName) {
+			out = append(out, d)
+		}
+	}
+	return out
 }
