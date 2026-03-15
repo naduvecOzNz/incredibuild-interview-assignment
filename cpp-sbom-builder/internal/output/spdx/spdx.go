@@ -39,13 +39,13 @@ type SpdxPackage struct {
 
 // SpdxSbom is the top-level SPDX 2.3 document structure.
 type SpdxSbom struct {
-	SPDXVersion       string            `json:"spdxVersion"`
-	DataLicense       string            `json:"dataLicense"`
-	SPDXID            string            `json:"SPDXID"`
-	Name              string            `json:"name"`
-	DocumentNamespace string            `json:"documentNamespace"`
-	CreationInfo      SpdxCreationInfo  `json:"creationInfo"`
-	Packages          []SpdxPackage     `json:"packages"`
+	SPDXVersion       string           `json:"spdxVersion"`
+	DataLicense       string           `json:"dataLicense"`
+	SPDXID            string           `json:"SPDXID"`
+	Name              string           `json:"name"`
+	DocumentNamespace string           `json:"documentNamespace"`
+	CreationInfo      SpdxCreationInfo `json:"creationInfo"`
+	Packages          []SpdxPackage    `json:"packages"`
 }
 
 var nonAlphanumeric = regexp.MustCompile(`[^a-zA-Z0-9]`)
@@ -60,27 +60,26 @@ func newUUID() string {
 	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
 
-func componentToSpdxPackage(c scanner.Component) SpdxPackage {
-	spdxID := "SPDXRef-" + sanitizeSPDXID(c.Name+"-"+c.Version)
+func dependencyToSpdxPackage(d scanner.Dependency) SpdxPackage {
+	spdxID := "SPDXRef-" + sanitizeSPDXID(d.Name+"-"+d.Version)
 
 	pkg := SpdxPackage{
 		SPDXID:           spdxID,
-		Name:             c.Name,
-		Version:          c.Version,
+		Name:             d.Name,
+		Version:          d.Version,
 		DownloadLocation: "NOASSERTION",
 		FilesAnalyzed:    false,
 		LicenseConcluded: "NOASSERTION",
 		LicenseDeclared:  "NOASSERTION",
 		CopyrightText:    "NOASSERTION",
-		Comment:          c.Description,
 	}
 
-	if c.PURL != "" {
+	if d.PURL != "" {
 		pkg.ExternalRefs = []SpdxExternalRef{
 			{
 				ReferenceCategory: "PACKAGE-MANAGER",
 				ReferenceType:     "purl",
-				ReferenceLocator:  c.PURL,
+				ReferenceLocator:  d.PURL,
 			},
 		}
 	}
@@ -88,11 +87,11 @@ func componentToSpdxPackage(c scanner.Component) SpdxPackage {
 	return pkg
 }
 
-// NewSpdxSbom constructs a valid SPDX 2.3 SpdxSbom from a project name and components.
-func NewSpdxSbom(projectName string, components []scanner.Component) *SpdxSbom {
+// NewSpdxSbom constructs a valid SPDX 2.3 SpdxSbom from a project name and dependencies.
+func NewSpdxSbom(projectName string, components []scanner.Dependency) *SpdxSbom {
 	packages := make([]SpdxPackage, 0, len(components))
 	for _, c := range components {
-		packages = append(packages, componentToSpdxPackage(c))
+		packages = append(packages, dependencyToSpdxPackage(c))
 	}
 
 	return &SpdxSbom{
@@ -114,11 +113,11 @@ func GenerateSpdxSbom(doc *SpdxSbom) ([]byte, error) {
 	return json.MarshalIndent(doc, "", "  ")
 }
 
-// SbomGenerator implements output.Generator for SPDX 2.3.
-type SbomGenerator struct{}
+// SbomFormatter implements output.SbomFormatter for SPDX 2.3.
+type SbomFormatter struct{}
 
-func (SbomGenerator) Format() string { return "spdx" }
+func (SbomFormatter) Format() string { return "spdx" }
 
-func (SbomGenerator) Generate(projectName string, components []scanner.Component) ([]byte, error) {
+func (SbomFormatter) Generate(projectName string, components []scanner.Dependency) ([]byte, error) {
 	return GenerateSpdxSbom(NewSpdxSbom(projectName, components))
 }

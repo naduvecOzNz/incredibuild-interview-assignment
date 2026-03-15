@@ -47,12 +47,11 @@ func TestNewSpdxSbom_DocumentNamespaceIsUnique(t *testing.T) {
 }
 
 func TestNewSpdxSbom_PackageFields(t *testing.T) {
-	components := []scanner.Component{
+	components := []scanner.Dependency{
 		{
-			Name:        "fmt",
-			Version:     "9.1.0",
-			PURL:        "pkg:github/fmtlib/fmt@9.1.0",
-			Description: "A formatting library",
+			Name:    "fmt",
+			Version: "9.1.0",
+			PURL:    "pkg:github/fmtlib/fmt@9.1.0",
 		},
 	}
 
@@ -104,7 +103,7 @@ func TestNewSpdxSbom_PackageFields(t *testing.T) {
 }
 
 func TestNewSpdxSbom_NoPURLOmitsExternalRefs(t *testing.T) {
-	components := []scanner.Component{
+	components := []scanner.Dependency{
 		{Name: "somelib", Version: "1.0.0"},
 	}
 	doc := NewSpdxSbom("proj", components)

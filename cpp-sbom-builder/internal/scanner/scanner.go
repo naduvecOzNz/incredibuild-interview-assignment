@@ -1,61 +1,93 @@
 package scanner
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+	"sync"
+)
 
-// Component represents a single discovered third-party dependency.
-type Component struct {
-	Name        string
-	Version     string
-	PURL        string // Package URL — primary deduplication key
-	Description string
+// Dependency represents a discovered third-party dependency.
+type Dependency struct {
+	Name    string
+	Version string // empty if unknown
+	PURL    string // primary deduplication key
 }
 
-// Strategy is the interface each dependency-detection mechanism must implement.
-// Concrete implementations (e.g. CMake parser, vcpkg parser) are added separately.
-type Strategy interface {
+// DependenciesDetectionStrategy is the interface each dependency-detection mechanism must implement.
+// Concrete implementations are added separately; strategies are layer-agnostic.
+type DependenciesDetectionStrategy interface {
 	// Name returns a human-readable label used in error messages and logging.
 	Name() string
-	// Scan walks dir and returns all Components it can discover.
-	Scan(dir string) ([]Component, error)
+	// Analyze inspects projectRoot using the file index and a read-only registry
+	// snapshot, and returns new or enriched dependencies.
+	Analyze(ctx context.Context, projectRoot string, idx *FileIndex, reg ReadOnlyRegistry) ([]Dependency, error)
 }
 
-// Scanner orchestrates one or more Strategy implementations.
-type Scanner struct {
-	strategies []Strategy
+// Orchestrator runs detection strategies in layers sequentially,
+// executing all strategies within a layer concurrently.
+type Orchestrator struct {
+	layers [][]DependenciesDetectionStrategy
 }
 
-// New constructs a Scanner with the given strategies.
-func New(strategies ...Strategy) *Scanner {
-	return &Scanner{strategies: strategies}
+// NewOrchestrator is the generic constructor used by New() and tests.
+// Each argument is a layer; layers execute in order, strategies within a layer run concurrently.
+func NewOrchestrator(layers ...[]DependenciesDetectionStrategy) *Orchestrator {
+	return &Orchestrator{layers: layers}
 }
 
-// Scan runs every registered strategy against dir, collects results,
-// deduplicates by PURL (fallback key: "Name@Version" when PURL is empty),
-// and returns a stable-ordered slice.
-func (s *Scanner) Scan(dir string) ([]Component, error) {
-	seen := make(map[string]Component)
-	order := make([]string, 0)
+// New constructs the default Orchestrator with all configured detection layers.
+// Layer assignment and strategy selection live here; callers remain unaware of both.
+func New() *Orchestrator {
+	return NewOrchestrator(
+		[]DependenciesDetectionStrategy{ /* L1: manifest strategies (CMake, Conan, vcpkg) */ },
+		[]DependenciesDetectionStrategy{ /* L2: binary + compile_commands strategies — run in parallel */ },
+		[]DependenciesDetectionStrategy{ /* L3: pkg-config strategies */ },
+		[]DependenciesDetectionStrategy{ /* L4: header include strategies */ },
+	)
+}
 
-	for _, strategy := range s.strategies {
-		components, err := strategy.Scan(dir)
-		if err != nil {
-			return nil, fmt.Errorf("strategy %q: %w", strategy.Name(), err)
+// Run indexes the project filesystem once, then executes each layer in order.
+// Strategies within a layer run concurrently; each layer receives the registry
+// state accumulated by all prior layers.
+func (o *Orchestrator) Run(ctx context.Context, projectRoot string) ([]Dependency, error) {
+	idx, err := Index(projectRoot)
+	if err != nil {
+		return nil, fmt.Errorf("file index: %w", err)
+	}
+
+	registry := newRegistry()
+
+	for _, layer := range o.layers {
+		if len(layer) == 0 {
+			continue
 		}
-		for _, c := range components {
-			key := c.PURL
-			if key == "" {
-				key = c.Name + "@" + c.Version
+
+		snapshot := registry.ReadOnly()
+
+		type result struct {
+			deps []Dependency
+			err  error
+			name string
+		}
+		ch := make(chan result, len(layer))
+
+		var wg sync.WaitGroup
+		for _, strategy := range layer {
+			wg.Go(func() {
+				deps, err := strategy.Analyze(ctx, projectRoot, idx, snapshot)
+				ch <- result{deps: deps, err: err, name: strategy.Name()}
+			})
+		}
+		wg.Wait()
+		close(ch)
+
+		for r := range ch {
+			if r.err != nil {
+				return nil, fmt.Errorf("strategy %q: %w", r.name, r.err)
 			}
-			if _, exists := seen[key]; !exists {
-				order = append(order, key)
-			}
-			seen[key] = c
+			registry.Merge(r.deps)
 		}
 	}
 
-	result := make([]Component, 0, len(order))
-	for _, key := range order {
-		result = append(result, seen[key])
-	}
-	return result, nil
+	return registry.All(), nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -15,8 +16,8 @@ import (
 
 // generators is the registry of supported output formats.
 // The first entry is always used; add new generators here when new formats are supported.
-var generators = []output.SbomGenerator{
-	spdx.SbomGenerator{},
+var generators = []output.SbomFormatter{
+	spdx.SbomFormatter{},
 }
 
 // run parses args, executes the scan and generation, and writes output to stdout.
@@ -53,8 +54,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 	gen := generators[0]
 
-	s := scanner.New() // strategies registered here as they are implemented
-	components, err := s.Scan(*targetDir)
+	s := scanner.New()
+	components, err := s.Run(context.Background(), *targetDir)
 	if err != nil {
 		fmt.Fprintf(stderr, "scan failed: %v\n", err)
 		return 1
