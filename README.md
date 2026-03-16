@@ -25,21 +25,22 @@ go build -o bin/cpp-sbom-builder ./cmd/sbom
 ### Usage
 
 ```
-cpp-sbom-builder --target <dir> [--output <file>] [--format spdx]
+cpp-sbom-builder --target <dir> [--output <file>]
 
 Flags:
   --target   path to the C++ project root directory (required)
   --output   write the SBOM to this file instead of stdout
-  --format   output format (default: spdx)
 ```
 
 ### Executing against the sample project
 
-A sample C++ project is provided under `sample-projects/` for quick verification.
-Its an open source project from: https://github.com/gabime/spdlog
+2 sample C++ projects are provided under `sample-projects/` for quick verification.
+1. spdlog - Its an open source project from: https://github.com/gabime/spdlog
 chosen since it was said to have 3rd party dependencies that enlisted only in headers.
 
-I also used open source project https://github.com/CrowCpp/Crow as reference, since strategies vcpkg-manifest and binary-analysis worked on it
+2. crow - also used open source project https://github.com/CrowCpp/Crow, since strategies vcpkg-manifest and binary-analysis worked on it and not spdlog.
+
+commited both to `sample-projects/`. since I worked on a specific commit, was not sure a git submodule would produce the same outputs.
 
 ```bash
 # Output to stdout
