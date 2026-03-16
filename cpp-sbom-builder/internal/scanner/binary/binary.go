@@ -7,6 +7,7 @@ import (
 	"context"
 	"debug/elf"
 	"debug/macho"
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -35,6 +36,10 @@ func New() scanner.DependenciesDetectionStrategy { return &binaryStrategy{} }
 func (s *binaryStrategy) Name() string { return "binary-analysis" }
 
 func (s *binaryStrategy) Analyze(_ context.Context, _ string, idx *scanner.FileIndex, _ scanner.ReadOnlyRegistry) ([]scanner.Dependency, error) {
+	if len(idx.BinaryFiles) == 0 {
+		fmt.Printf("strategy %q: no relevant files found\n", s.Name())
+		return nil, nil
+	}
 	seen := map[string]bool{}
 	var deps []scanner.Dependency
 

@@ -26,6 +26,10 @@ func New() scanner.DependenciesDetectionStrategy { return &headerIncludeStrategy
 func (s *headerIncludeStrategy) Name() string { return "header-include-analysis" }
 
 func (s *headerIncludeStrategy) Analyze(_ context.Context, projectRoot string, idx *scanner.FileIndex, reg scanner.ReadOnlyRegistry) ([]scanner.Dependency, error) {
+	if len(idx.SourceFiles) == 0 && len(idx.HeaderFiles) == 0 {
+		fmt.Printf("strategy %q: no relevant files found\n", s.Name())
+		return nil, nil
+	}
 	// Build a set of internal header basenames for fast lookup
 	internalHeaders := buildInternalHeaderSet(projectRoot, idx.HeaderFiles)
 

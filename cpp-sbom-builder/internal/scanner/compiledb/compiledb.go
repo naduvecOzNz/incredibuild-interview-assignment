@@ -37,6 +37,10 @@ type compileEntry struct {
 }
 
 func (s *compileDBStrategy) Analyze(_ context.Context, projectRoot string, idx *scanner.FileIndex, _ scanner.ReadOnlyRegistry) ([]scanner.Dependency, error) {
+	if len(idx.CompileCommandFiles) == 0 {
+		fmt.Printf("strategy %q: no relevant files found\n", s.Name())
+		return nil, nil
+	}
 	seen := map[string]bool{}
 	var deps []scanner.Dependency
 

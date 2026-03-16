@@ -100,9 +100,11 @@ func (o *Orchestrator) Run(ctx context.Context, projectRoot string) ([]Dependenc
 func filterSelfReference(deps []Dependency, projectName string) []Dependency {
 	var out []Dependency
 	for _, d := range deps {
-		if !strings.EqualFold(d.Name, projectName) {
-			out = append(out, d)
+		if strings.EqualFold(d.Name, projectName) {
+			fmt.Printf("filtering self-reference: %q matches project name %q\n", d.Name, projectName)
+			continue
 		}
+		out = append(out, d)
 	}
 	return out
 }

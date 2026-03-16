@@ -23,6 +23,10 @@ func New() scanner.DependenciesDetectionStrategy { return &pkgConfigStrategy{} }
 func (s *pkgConfigStrategy) Name() string { return "pkg-config" }
 
 func (s *pkgConfigStrategy) Analyze(_ context.Context, _ string, idx *scanner.FileIndex, _ scanner.ReadOnlyRegistry) ([]scanner.Dependency, error) {
+	if len(idx.PkgConfigFiles) == 0 {
+		fmt.Printf("strategy %q: no relevant files found\n", s.Name())
+		return nil, nil
+	}
 	seen := map[string]bool{}
 	var deps []scanner.Dependency
 

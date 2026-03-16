@@ -22,6 +22,10 @@ func NewVcpkg() scanner.DependenciesDetectionStrategy { return &vcpkgStrategy{} 
 func (s *vcpkgStrategy) Name() string { return "vcpkg-manifest" }
 
 func (s *vcpkgStrategy) Analyze(_ context.Context, _ string, idx *scanner.FileIndex, _ scanner.ReadOnlyRegistry) ([]scanner.Dependency, error) {
+	if len(idx.ManifestFiles) == 0 {
+		fmt.Printf("strategy %q: no relevant files found\n", s.Name())
+		return nil, nil
+	}
 	// Collect deps from vcpkg.json files, then enrich from vcpkg-configuration.json overrides.
 	// Key: lowercase name → Dependency
 	byName := map[string]scanner.Dependency{}

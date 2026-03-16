@@ -35,6 +35,10 @@ func NewCMake() scanner.DependenciesDetectionStrategy { return &cmakeStrategy{} 
 func (s *cmakeStrategy) Name() string { return "cmake-manifest" }
 
 func (s *cmakeStrategy) Analyze(_ context.Context, _ string, idx *scanner.FileIndex, _ scanner.ReadOnlyRegistry) ([]scanner.Dependency, error) {
+	if len(idx.ManifestFiles) == 0 {
+		fmt.Printf("strategy %q: no relevant files found\n", s.Name())
+		return nil, nil
+	}
 	var deps []scanner.Dependency
 	seen := map[string]bool{}
 
