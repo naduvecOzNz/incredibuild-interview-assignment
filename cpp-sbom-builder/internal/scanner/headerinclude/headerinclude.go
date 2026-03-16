@@ -1,3 +1,7 @@
+// Package headerinclude detects third-party dependencies by scanning C/C++ source and header
+// files for #include directives. It filters out C/C++ standard library headers and project-
+// internal headers; whatever remains is treated as a third-party dependency. This is the only
+// strategy that reliably finds header-only libraries that leave no binary or manifest trace.
 package headerinclude
 
 import (
@@ -42,18 +46,16 @@ func (s *headerIncludeStrategy) Analyze(_ context.Context, projectRoot string, i
 		}
 	}
 
-	// Build a name → version map from the registry for fast lookup (case-insensitive)
-	registeredWithVersion := map[string]bool{}
+	// Build a set of already-registered names for fast lookup (case-insensitive)
+	registered := map[string]bool{}
 	for _, d := range reg.All() {
-		if d.Version != "" {
-			registeredWithVersion[strings.ToLower(d.Name)] = true
-		}
+		registered[strings.ToLower(d.Name)] = true
 	}
 
-	// Convert namespaces to deps, skipping those already in the registry with a version
+	// Convert namespaces to deps, skipping those already in the registry
 	var deps []scanner.Dependency
 	for ns := range namespaces {
-		if registeredWithVersion[strings.ToLower(ns)] {
+		if registered[strings.ToLower(ns)] {
 			continue
 		}
 		deps = append(deps, scanner.Dependency{
