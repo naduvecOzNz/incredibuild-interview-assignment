@@ -80,6 +80,7 @@ go test -v ./...
 The test suite verifies:
 - SPDX 2.3 output format correctness (required fields, valid JSON structure)
 - CLI flag validation
+- each strategy
 
 
 ## Notes
