@@ -48,6 +48,17 @@ var stdHeaders = map[string]struct{}{
 	// C++ standard library — atomics & concurrency
 	"atomic": {}, "barrier": {}, "latch": {}, "semaphore": {},
 
+	// C++17 additions
+	"charconv": {},
+
+	// C++20 additions
+	"bit": {}, "compare": {}, "concepts": {}, "coroutine": {}, "format": {},
+	"numbers": {}, "ranges": {}, "source_location": {}, "syncstream": {},
+
+	// C++23 additions
+	"expected": {}, "flat_map": {}, "flat_set": {}, "generator": {},
+	"mdspan": {}, "print": {}, "spanstream": {}, "stacktrace": {},
+
 	// Windows SDK headers (commonly seen in cross-platform projects)
 	"windows.h": {}, "winsock2.h": {}, "ws2tcpip.h": {}, "windef.h": {},
 	"winbase.h": {}, "winnt.h": {}, "tchar.h": {},

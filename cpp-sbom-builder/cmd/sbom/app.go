@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -72,12 +71,16 @@ func run(args []string, stdout, stderr io.Writer) int {
 	if *outputFile != "" {
 		f, err := os.Create(*outputFile)
 		if err != nil {
-			log.Fatalf("failed to create output file: %v", err)
+			fmt.Fprintf(stderr, "failed to create output file: %v\n", err)
+			return 1
 		}
 		defer f.Close()
 		w = f
 	}
 
-	fmt.Fprintln(w, string(data))
+	if _, err := fmt.Fprintln(w, string(data)); err != nil {
+		fmt.Fprintf(stderr, "write failed: %v\n", err)
+		return 1
+	}
 	return 0
 }

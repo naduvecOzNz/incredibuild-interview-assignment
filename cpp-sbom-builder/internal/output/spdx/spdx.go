@@ -60,8 +60,8 @@ func newUUID() string {
 	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
 
-func dependencyToSpdxPackage(d scanner.Dependency) SpdxPackage {
-	spdxID := "SPDXRef-" + sanitizeSPDXID(d.Name+"-"+d.Version)
+func dependencyToSpdxPackage(d scanner.Dependency, usedIDs map[string]int) SpdxPackage {
+	spdxID := generateSPDXID(d, usedIDs)
 
 	pkg := SpdxPackage{
 		SPDXID:           spdxID,
@@ -87,11 +87,23 @@ func dependencyToSpdxPackage(d scanner.Dependency) SpdxPackage {
 	return pkg
 }
 
+// also consider used ids - if collide, create a new one with index
+func generateSPDXID(d scanner.Dependency, usedIDs map[string]int) string {
+	base := "SPDXRef-" + sanitizeSPDXID(d.Name+"-"+d.Version)
+	usedIDs[base]++
+	spdxID := base
+	if usedIDs[base] > 1 {
+		spdxID = fmt.Sprintf("%s-%d", base, usedIDs[base])
+	}
+	return spdxID
+}
+
 // NewSpdxSbom constructs a valid SPDX 2.3 SpdxSbom from a project name and dependencies.
 func NewSpdxSbom(projectName string, components []scanner.Dependency) *SpdxSbom {
+	usedIDs := map[string]int{}
 	packages := make([]SpdxPackage, 0, len(components))
 	for _, c := range components {
-		packages = append(packages, dependencyToSpdxPackage(c))
+		packages = append(packages, dependencyToSpdxPackage(c, usedIDs))
 	}
 
 	return &SpdxSbom{

@@ -145,12 +145,16 @@ func isInternalHeader(include string, internalHeaders map[string]bool) bool {
 	if internalHeaders[include] {
 		return true
 	}
-	// Also check basename
+	// check basename
 	if internalHeaders[filepath.Base(include)] {
 		return true
 	}
 	// Check as path relative to project root
 	if internalHeaders[filepath.ToSlash(include)] {
+		return true
+	}
+	// Relative paths (./ or ../) are always project-internal
+	if strings.HasPrefix(include, "./") || strings.HasPrefix(include, "../") {
 		return true
 	}
 	return false
