@@ -39,6 +39,8 @@ A sample C++ project is provided under `sample-projects/` for quick verification
 Its an open source project from: https://github.com/gabime/spdlog
 chosen since it was said to have 3rd party dependencies that enlisted only in headers.
 
+I also used open source project https://github.com/CrowCpp/Crow as reference, since strategies vcpkg-manifest and binary-analysis worked on it
+
 ```bash
 # Output to stdout
 ./bin/cpp-sbom-builder --target sample-projects/spdlog
@@ -77,3 +79,13 @@ go test -v ./...
 The test suite verifies:
 - SPDX 2.3 output format correctness (required fields, valid JSON structure)
 - CLI flag validation
+
+
+## Notes
+
+1. I tried different strategies - and removed 2 that were not successfull in finding anything in the 2 sample projects. those were:
+
+- Compiler Build Log Analysis - analyze compile_commands.json for -I, -L flags. thought powerful because it reflects what the compiler actually saw during the build.
+- pkg-config metadata, about what installed via system package managers or local builds.
+
+2. I created layered orchertration of strategies. to allow strategies to be more effient (for exp in versionmacro), and to allow conceptual seperation, for example for more relaible strategies.
