@@ -1,3 +1,7 @@
+// Package pkgconfig detects third-party dependencies by reading .pc (pkg-config) metadata files
+// found in the project tree. These files are written by system package managers and library
+// installers and explicitly state the library name, version, and link flags — making them a
+// reliable version-enrichment source for system-installed libraries.
 package pkgconfig
 
 import (

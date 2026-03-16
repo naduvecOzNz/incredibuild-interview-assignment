@@ -1,3 +1,7 @@
+// Package manifest detects third-party dependencies from build system manifest files.
+// The CMake strategy parses CMakeLists.txt for find_package(), FetchContent_Declare(), and
+// ExternalProject_Add() calls — the highest-confidence source since developers explicitly
+// declare these dependencies by name and often by version.
 package manifest
 
 import (

@@ -1,3 +1,6 @@
+// The vcpkg strategy parses vcpkg.json and vcpkg-configuration.json to extract dependencies
+// managed by the vcpkg C++ package manager. Versions from configuration overrides enrich
+// entries found in the main manifest.
 package manifest
 
 import (

@@ -1,3 +1,6 @@
+// Package binary detects third-party dependencies from compiled binary files (.so, .dll, .dylib, .a).
+// It reads ELF SONAME or Mach-O install-name metadata when available, and falls back to parsing
+// the version from the filename. High-confidence: if a library is linked, it shows up here.
 package binary
 
 import (
